@@ -208,6 +208,10 @@ class Pendant {
       // Process/generate samples here
 
       // phasor update
+      if (phase_reset) {
+        w = 0.f;
+        phase_reset = false;
+      }
       w += w0;
       w = modff(w, nullptr); // take fractional parts to prevent overflow
 
@@ -331,7 +335,7 @@ class Pendant {
   }
 
   inline void AllNoteOff() {
-    w = 0.f; // note: phase reset does not make sine wave initial clicking disappear
+    phase_reset = true;
   }
 
   inline void PitchBend(uint8_t bend) {
@@ -367,6 +371,7 @@ class Pendant {
   float deflection_point{0.5f};
   float value{0.5f};
   float position{0.f};
+  bool phase_reset{false};
 
   /*===========================================================================*/
   /* Private Methods. */
