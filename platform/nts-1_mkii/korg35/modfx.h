@@ -262,6 +262,8 @@ class Modfx {
       "LP",
       "BP",
       "HP",
+      "For1",
+      "For2"
     };
     
     switch (index) {

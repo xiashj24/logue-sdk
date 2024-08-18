@@ -65,7 +65,7 @@ const __unit_header unit_header_t unit_header = {
         {0, 1023, 0, 0, k_unit_param_type_none, 1, 0, 0, {"RES"}},
 
         // 8 Edit menu parameters
-        {0, 2, 0, 0, k_unit_param_type_strings, 0, 0, 0, {"MODE"}}, // Example of a strings type parameter
+        {0, 4, 0, 0, k_unit_param_type_strings, 0, 0, 0, {"MODE"}}, // Example of a strings type parameter
         {0, 0, 0, 0, k_unit_param_type_none, 0, 0, 0, {""}},
         {0, 0, 0, 0, k_unit_param_type_none, 0, 0, 0, {""}},
         {0, 0, 0, 0, k_unit_param_type_none, 0, 0, 0, {""}},
