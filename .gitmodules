@@ -3,4 +3,4 @@
 	url = https://github.com/ARM-software/CMSIS.git
 [submodule "platform/ext/DaisySP"]
 	path = platform/ext/DaisySP
-	url = https://github.com/electro-smith/DaisySP
+	url = https://github.com/xiashj24/DaisySP
