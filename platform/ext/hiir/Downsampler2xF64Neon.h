@@ -1,0 +1,143 @@
+/*****************************************************************************
+
+        Downsampler2xF64Neon.h
+        Author: Laurent de Soras, 2024
+
+Downsamples the input signal by a factor 2, using NEON instruction set.
+
+This object must be aligned on a 16-byte boundary!
+
+Template parameters:
+	- NC: number of coefficients, > 0
+
+
+--- Legal stuff ---
+
+This program is free software. It comes without any warranty, to
+the extent permitted by applicable law.You can redistribute it
+and/or modify it under the terms of the Do What The Fuck You Want
+To Public License, Version 2, as published by Sam Hocevar. See
+http://www.wtfpl.net/ for more details.
+
+*Tab=3***********************************************************************/
+
+
+
+#pragma once
+#if ! defined (hiir_Downsampler2xF64Neon_HEADER_INCLUDED)
+#define hiir_Downsampler2xF64Neon_HEADER_INCLUDED
+
+
+
+/*\\\ INCLUDE FILES \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
+
+#include "hiir/def.h"
+#include "hiir/StageDataF64Neon.h"
+
+#include <arm_neon.h>
+
+#include <array>
+
+
+
+namespace hiir
+{
+
+
+
+template <int NC>
+class Downsampler2xF64Neon
+{
+
+	static_assert ((NC > 0), "Number of coefficient must be positive.");
+
+/*\\\ PUBLIC \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
+
+public:
+
+	typedef double DataType;
+	static constexpr int _nbr_chn  = 1;
+	static constexpr int NBR_COEFS = NC;
+	static constexpr double _delay = -1;
+
+	               Downsampler2xF64Neon () noexcept;
+	               Downsampler2xF64Neon (const Downsampler2xF64Neon <NC> &other) = default;
+	               Downsampler2xF64Neon (Downsampler2xF64Neon <NC> &&other) = default;
+	               ~Downsampler2xF64Neon ()                            = default;
+
+	Downsampler2xF64Neon <NC> &
+	               operator = (const Downsampler2xF64Neon <NC> &other) = default;
+	Downsampler2xF64Neon <NC> &
+	               operator = (Downsampler2xF64Neon <NC> &&other)      = default;
+
+	void           set_coefs (const double coef_arr []) noexcept;
+
+	hiir_FORCEINLINE double
+	               process_sample (const double in_ptr [2]) noexcept;
+	void           process_block (double out_ptr [], const double in_ptr [], long nbr_spl) noexcept;
+
+	hiir_FORCEINLINE void
+	               process_sample_split (double &low, double &high, const double in_ptr [2]) noexcept;
+	void           process_block_split (double out_l_ptr [], double out_h_ptr [], const double in_ptr [], long nbr_spl) noexcept;
+
+	void           clear_buffers () noexcept;
+
+
+
+/*\\\ PROTECTED \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
+
+protected:
+
+
+
+/*\\\ PRIVATE \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
+
+private:
+
+	static constexpr int _stage_width = 2;
+	static constexpr int _nbr_stages  =
+		(NBR_COEFS + _stage_width - 1) / _stage_width;
+
+	template <typename FL, typename FH>
+	hiir_FORCEINLINE long
+	               process_block_double (double out_l_ptr [], double out_h_ptr [], const double in_ptr [], long nbr_spl, FL fnc_l, FH fnc_h) noexcept;
+
+	hiir_FORCEINLINE static void
+	               store_low (double *ptr, float64x2_t even, float64x2_t odd, float64x2_t half) noexcept;
+	hiir_FORCEINLINE static void
+	               store_high (double *ptr, float64x2_t even, float64x2_t odd, float64x2_t half) noexcept;
+	hiir_FORCEINLINE static void
+	               bypass (double *, float64x2_t, float64x2_t, float64x2_t) noexcept {}
+
+	// Stage 0 contains only input memory
+	typedef std::array <StageDataF64Neon, _nbr_stages + 1> Filter;
+
+	// Should be the first member (thus easier to align)
+	Filter         _filter;
+
+
+
+/*\\\ FORBIDDEN MEMBER FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
+
+private:
+
+	bool           operator == (const Downsampler2xF64Neon <NC> &other) const = delete;
+	bool           operator != (const Downsampler2xF64Neon <NC> &other) const = delete;
+
+}; // class Downsampler2xF64Neon
+
+
+
+}  // namespace hiir
+
+
+
+#include "hiir/Downsampler2xF64Neon.hpp"
+
+
+
+#endif // hiir_Downsampler2xF64Neon_HEADER_INCLUDED
+
+
+
+/*\\\ EOF \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
