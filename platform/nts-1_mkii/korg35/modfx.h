@@ -50,9 +50,6 @@
 #include "utils/int_math.h"   // for clipminmaxi32()
 
 #include "korg35.h"
-// #include "ladder.h"
-// #include "oberheim.h"
-// #include "sallenkey.h"
 
 class Modfx {
  public:
@@ -61,7 +58,7 @@ class Modfx {
   /*===========================================================================*/
 
   enum {
-    BUFFER_LENGTH = 0x8000U,
+    BUFFER_LENGTH = 0x4000U,
   };
 
   enum {
@@ -129,7 +126,16 @@ class Modfx {
     // Make sure parameters are reset to default values
     params_.reset();
 
-    filter.init(desc->samplerate);
+    filter.init(desc->samplerate); // no oversampling
+    // filter.init(desc->samplerate*2); // 2x oversampling
+
+    const int L = FRAME_SIZE; // no oversampling
+    // const int L = FRAME_SIZE * 2;  // 2x oversampling
+
+    stereo_buffer_left_in = allocated_buffer_;
+    stereo_buffer_right_in = allocated_buffer_ + L;
+    stereo_buffer_left_out = allocated_buffer_ + L*2;
+    stereo_buffer_right_out = allocated_buffer_ + L*3;
 
     return k_unit_err_none;
   }
@@ -169,26 +175,17 @@ class Modfx {
     // Caching current parameter values. Consider interpolating sensitive parameters.
     const Params p = params_;
 
-    // smoothing is now handled inside the korg35.compute() function
-    // float freq_target = linintf(p.time, 0.f, 1.f);
-    // float res_target = linintf(p.depth, 0.f, 1.f);
-    // freq = linintf(0.03f, freq, freq_target);
-    // res = linintf(0.03f, res, res_target);
-
     filter.setFreqNormalized(p.cutoff);
     filter.setResonance(p.res);
     filter.setMode(p.mode);
 
-    float stereo_buffer_left_in[FRAME_SIZE];
-    float stereo_buffer_right_in[FRAME_SIZE];
+    // no oversampling
     float* stereo_buffer_in[2] = {stereo_buffer_left_in, stereo_buffer_right_in};
 
-    float stereo_buffer_left_out[FRAME_SIZE];
-    float stereo_buffer_right_out[FRAME_SIZE];
     float* stereo_buffer_out[2] = {stereo_buffer_left_out, stereo_buffer_right_out};
 
     // de-interleave buffer
-    for (int i = 0; i < 64; ++i, in_p += 2)
+    for (int i = 0; i < FRAME_SIZE; i+=1, in_p += 2)
     {
       stereo_buffer_in[0][i] = in_p[0];
       stereo_buffer_in[1][i] = in_p[1];
@@ -198,11 +195,34 @@ class Modfx {
     filter.compute(FRAME_SIZE, stereo_buffer_in, stereo_buffer_out);
 
     // interleave buffer
-    for (int i = 0; i < 64; ++i, out_p += 2)
+    for (int i = 0; i < FRAME_SIZE; i+=1, out_p += 2)
     {
       out_p[0] = stereo_buffer_out[0][i];
       out_p[1] = stereo_buffer_out[1][i];
     }
+
+    // 2x oversampling
+    // float* stereo_buffer_in[2] = {stereo_buffer_left_in, stereo_buffer_right_in};
+    // float* stereo_buffer_out[2] = {stereo_buffer_left_out, stereo_buffer_right_out};
+
+    // // de-interleave buffer
+    // for (int i = 0; i < FRAME_SIZE*2; i+=2, in_p += 2)
+    // {
+    //   stereo_buffer_in[0][i] = in_p[0];
+    //   stereo_buffer_in[0][i+1] = in_p[0];
+    //   stereo_buffer_in[1][i] = in_p[1];
+    //   stereo_buffer_in[1][i+1] = in_p[1];
+    // }
+    
+    // // process frame
+    // filter.compute(FRAME_SIZE*2, stereo_buffer_in, stereo_buffer_out);
+
+    // // interleave buffer
+    // for (int i = 0; i < FRAME_SIZE*2; i+=2, out_p += 2)
+    // {
+    //   out_p[0] = stereo_buffer_out[0][i+1];
+    //   out_p[1] = stereo_buffer_out[1][i+1];
+    // }
   }
 
   inline void setParameter(uint8_t index, int32_t value) {
@@ -260,10 +280,9 @@ class Modfx {
     
     static const char * param3_strings[korg35::NUM_MODE] = {
       "LP",
-      "BP",
       "HP",
       "For1",
-      "For2"
+      "For2",
     };
     
     switch (index) {
@@ -304,13 +323,12 @@ class Modfx {
   
   float * allocated_buffer_;
 
-  float freq {1.f};
-  float res {0.f};
-
   korg35 filter;
-  // ladder filter;
-  // oberheim filter;
-  // sallenkey filter;
+
+  float* stereo_buffer_left_in;
+  float* stereo_buffer_right_in;
+  float* stereo_buffer_left_out;
+  float* stereo_buffer_right_out;
   
   /*===========================================================================*/
   /* Private Methods. */
