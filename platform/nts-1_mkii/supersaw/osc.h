@@ -133,18 +133,15 @@ class Osc {
 
     noise.Init();
 
-    for (int i = 0; i < HPF_ORDER; ++i)
-    {
-      hpf[i].Init();
-      hpf[i].SetFilterMode(daisysp::OnePole::FILTER_MODE_HIGH_PASS);
-    }
-
     for (int i = 0; i < LPF_ORDER; ++i)
     {
       lpf_noise[i].Init();
       lpf_noise[i].SetFilterMode(daisysp::OnePole::FILTER_MODE_LOW_PASS);
       lpf_noise[i].SetFrequency(NOISE_LPF_FREQ); // smooth out some highend
-    } 
+    }
+
+    hpf_master.Init(k_samplerate);
+    hpf_master.SetRes(0.5f);
 
     return k_unit_err_none;
   }
@@ -184,16 +181,11 @@ class Osc {
     float w0 = osc_w0f_for_note((ctxt->pitch)>>8, ctxt->pitch & 0xFF);
     float lfo = q31_to_f32(ctxt->shape_lfo);
     float f0 = w0 * k_samplerate;
-
+    hpf_master.SetFreq(f0);
+    
     float detune = linintf(clip01f(p.spread+lfo), 0.01f, 0.5f);
     float mix = linintf(p.mix, 0.f, 1.f);
     float noise_fm_depth = linintf(p.noise, 0.0001f, 0.01f);
-
-    for (int i = 0; i < HPF_ORDER; ++i)
-    {
-      hpf[i].SetFrequency(w0 * 0.5); // 50% key tracking hpf to remove aliasing below f0
-    }
-
 
     for (int i = 0; i < OSC_NUM; ++i)
     {
@@ -242,13 +234,9 @@ class Osc {
         osc_mix += osc_bank[i].Process();
       }
       
-      float hpf_out = osc_mix;
-      for (int i = 0; i < HPF_ORDER; ++i)
-      {
-        hpf_out = hpf[i].Process(hpf_out);
-      }
-      
-      float output = hpf_out;
+      hpf_master.Process(osc_mix);
+
+      float output = hpf_master.High();
 
       *out_p = output;
     }
@@ -381,9 +369,9 @@ class Osc {
   /*===========================================================================*/
   // detune interval in hz
   static constexpr int OSC_NUM = 7;
-  static constexpr int HPF_ORDER = 4;
+  // static constexpr int HPF_ORDER = 0;
   static constexpr int LPF_ORDER = 1;
-  static constexpr float NOISE_LPF_FREQ = 0.2f;
+  static constexpr float NOISE_LPF_FREQ = 0.25f;
 
   /*===========================================================================*/
   /* Private Member Variables. */
@@ -397,9 +385,8 @@ class Osc {
 
   daisysp::Oscillator osc_bank[OSC_NUM];
   daisysp::WhiteNoise noise;
-  daisysp::OnePole hpf[HPF_ORDER];
   daisysp::OnePole lpf_noise[LPF_ORDER];
-
+  daisysp::Svf hpf_master;
 
   // daisysp::Svf svf;
 
