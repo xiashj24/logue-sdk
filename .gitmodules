@@ -4,3 +4,6 @@
 [submodule "platform/ext/DaisySP"]
 	path = platform/ext/DaisySP
 	url = https://github.com/xiashj24/DaisySP
+[submodule "platform/ext/eigen"]
+	path = platform/ext/eigen
+	url = https://gitlab.com/libeigen/eigen.git
