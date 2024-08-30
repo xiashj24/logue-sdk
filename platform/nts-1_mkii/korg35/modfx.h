@@ -178,12 +178,9 @@ class Modfx {
     filter.setFreqNormalized(p.cutoff);
     filter.setResonance(p.res);
     filter.setMode(p.mode);
-
-    // no oversampling
     float* stereo_buffer_in[2] = {stereo_buffer_left_in, stereo_buffer_right_in};
-
     float* stereo_buffer_out[2] = {stereo_buffer_left_out, stereo_buffer_right_out};
-
+    // no oversampling
     // de-interleave buffer
     for (int i = 0; i < FRAME_SIZE; i+=1, in_p += 2)
     {
@@ -202,8 +199,6 @@ class Modfx {
     }
 
     // 2x oversampling
-    // float* stereo_buffer_in[2] = {stereo_buffer_left_in, stereo_buffer_right_in};
-    // float* stereo_buffer_out[2] = {stereo_buffer_left_out, stereo_buffer_right_out};
 
     // // de-interleave buffer
     // for (int i = 0; i < FRAME_SIZE*2; i+=2, in_p += 2)

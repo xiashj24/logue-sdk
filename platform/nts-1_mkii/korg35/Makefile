@@ -39,7 +39,7 @@ include config.mk
 #
 
 # Define project name here
-PROJECT ?= korg35
+PROJECT ?= VAFilter
 
 ##############################################################################
 # Setup cross compilation

@@ -49,7 +49,7 @@ const __unit_header unit_header_t unit_header = {
     .dev_id = 0x4B444959,                                  // Developer ID. See https://github.com/korginc/logue-sdk/blob/master/developer_ids.md
     .unit_id = 0x0U,                                       // ID for this unit. Scoped within the context of a given dev_id.
     .version = 0x00010000U,                                // This unit's version: major.minor.patch (major<<16 minor<<8 patch).
-    .name = "Korg35",                                       // Name for this unit, will be displayed on device
+    .name = "VA Filter",                                       // Name for this unit, will be displayed on device
     .num_params = 3,                                       // Number of valid parameter descriptors. (max. 10)
     
     .params = {

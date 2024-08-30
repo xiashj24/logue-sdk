@@ -2,7 +2,7 @@
 # Configuration for Makefile
 #
 
-PROJECT := korg35
+PROJECT := VAFilter
 PROJECT_TYPE := modfx
 
 ##############################################################################
